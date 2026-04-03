@@ -317,6 +317,16 @@
         font-weight: 700;
       }
 
+      .pill-estimate {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .pill-invoice {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+
       .history-actions {
         display: flex;
         flex-wrap: wrap;
@@ -627,27 +637,6 @@
 
       <section id="sectionHistory" class="card hidden">
         <h2>過去の帳票</h2>
-
-        <div class="history-filter">
-          <label class="field">
-            種別
-            <select id="historyType">
-              <option value="">すべて</option>
-              <option value="estimate">見積書</option>
-              <option value="invoice">請求書</option>
-            </select>
-          </label>
-
-          <label class="field">
-            キーワード
-            <input id="historyKeyword" type="text" placeholder="宛名・件名・番号で検索">
-          </label>
-
-          <div style="display:flex; align-items:flex-end;">
-            <button id="btnHistorySearch" type="button" class="primary-btn" style="width:100%;">検索</button>
-          </div>
-        </div>
-
         <div id="historyList" class="history-list"></div>
       </section>
     </div>
@@ -857,12 +846,6 @@ function bindEvents_() {
   el_('btnOpenPdf').addEventListener('click', openCurrentPdf_);
   el_('btnCopyPdfUrl').addEventListener('click', copyCurrentPdfUrl_);
 
-  el_('btnHistorySearch').addEventListener('click', reloadHistory_);
-  el_('historyKeyword').addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      reloadHistory_();
-    }
-  });
 
   el_('historyList').addEventListener('click', async function(event) {
     var button = event.target.closest('[data-action]');
@@ -1252,8 +1235,6 @@ async function reloadHistory_() {
   try {
     var payload = {
       userId: state.userId,
-      documentType: value_('historyType'),
-      keyword: value_('historyKeyword'),
     };
 
     var res = await gasPost_('listDocuments', payload);
@@ -1295,7 +1276,7 @@ function renderHistoryList_(documents) {
       '    </div>',
       '  </div>',
       '  <div class="history-tags">',
-      '    <span class="pill">' + escapeHtml_(typeLabel) + '</span>',
+      '    <span class="pill ' + (readServerValue_(doc, 'document_type') === 'invoice' ? 'pill-invoice' : 'pill-estimate') + '">' + escapeHtml_(typeLabel) + '</span>',
       '    <span class="pill">' + escapeHtml_(statusLabel) + '</span>',
       '    <span class="pill">' + documentNo + '</span>',
       '  </div>',
