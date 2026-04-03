@@ -1090,6 +1090,11 @@ async function saveCurrentDocument_(status) {
 
     toast_(status === 'issued' ? 'PDFを発行しました' : '下書きを保存しました');
     showSection_('document');
+
+    // PDF発行時にLIFFのトークにURLを送信
+    if (status === 'issued' && res.pdf && res.pdf.downloadUrl) {
+      await sendPdfUrlToChat_(res.document, res.pdf);
+    }
   } catch (err) {
     console.error(err);
     toast_(normalizeErrorMessage_(err), 'error');
@@ -1495,6 +1500,29 @@ function openCurrentPdf_() {
     return;
   }
   openUrl_(state.currentResult.downloadUrl);
+}
+
+async function sendPdfUrlToChat_(doc, pdf) {
+  if (!state.liffReady || typeof liff === 'undefined' || !liff.isApiAvailable('sendMessages')) {
+    return;
+  }
+
+  var docType = formatDocumentType_(readServerValue_(doc, 'document_type'));
+  var docNo = readServerValue_(doc, 'document_no') || '';
+  var recipient = readServerValue_(doc, 'recipient_name') || '';
+  var total = formatNumber_(Number(readServerValue_(doc, 'total') || 0));
+
+  var text = docType + 'を発行しました\n' +
+    'No: ' + docNo + '\n' +
+    '宛名: ' + recipient + '\n' +
+    '金額: ' + total + '円\n' +
+    pdf.downloadUrl;
+
+  try {
+    await liff.sendMessages([{ type: 'text', text: text }]);
+  } catch (e) {
+    console.warn('[sendMessages]', e);
+  }
 }
 
 async function copyCurrentPdfUrl_() {
