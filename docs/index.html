@@ -613,10 +613,14 @@
           <p class="result-title">帳票を保存しました</p>
           <p id="resultMeta" class="result-meta"></p>
 
+          <div id="pdfPreviewWrap" class="hidden" style="margin:12px 0;">
+            <iframe id="pdfPreviewFrame" style="width:100%;height:500px;border:1px solid #d0d5dd;border-radius:10px;" src="about:blank"></iframe>
+          </div>
+
           <div class="section-actions">
+            <button id="btnPreviewPdf" type="button" class="primary-btn">PDFプレビュー</button>
             <button id="btnOpenPdf" type="button" class="primary-btn">PDFを開く</button>
             <button id="btnCopyPdfUrl" type="button" class="secondary-btn">URLをコピー</button>
-            <button id="btnSharePdf" type="button" class="secondary-btn">LINEで共有</button>
           </div>
         </div>
       </section>
@@ -849,9 +853,9 @@ function bindEvents_() {
     prepareNewDocument_(state.currentType);
   });
 
+  el_('btnPreviewPdf').addEventListener('click', previewCurrentPdf_);
   el_('btnOpenPdf').addEventListener('click', openCurrentPdf_);
   el_('btnCopyPdfUrl').addEventListener('click', copyCurrentPdfUrl_);
-  el_('btnSharePdf').addEventListener('click', shareCurrentPdf_);
 
   el_('btnHistorySearch').addEventListener('click', reloadHistory_);
   el_('historyKeyword').addEventListener('keydown', function(event) {
@@ -1439,8 +1443,11 @@ function showResult_(doc, pdf) {
     return;
   }
 
+  var fileId = (pdf && pdf.fileId) ? pdf.fileId : readServerValue_(doc, 'pdf_file_id');
+
   state.currentResult = {
     downloadUrl: downloadUrl,
+    fileId: fileId,
     documentNo: documentNo,
     total: total,
     recipientName: recipientName,
@@ -1459,6 +1466,27 @@ function clearCurrentResult_() {
   state.currentResult = null;
   el_('resultBox').classList.add('hidden');
   el_('resultMeta').textContent = '';
+  el_('pdfPreviewWrap').classList.add('hidden');
+  el_('pdfPreviewFrame').src = 'about:blank';
+}
+
+function previewCurrentPdf_() {
+  if (!state.currentResult || !state.currentResult.fileId) {
+    toast_('PDFがありません');
+    return;
+  }
+  var previewUrl = 'https://drive.google.com/file/d/' + state.currentResult.fileId + '/preview';
+  var wrap = el_('pdfPreviewWrap');
+  var frame = el_('pdfPreviewFrame');
+
+  if (!wrap.classList.contains('hidden')) {
+    wrap.classList.add('hidden');
+    frame.src = 'about:blank';
+    return;
+  }
+
+  frame.src = previewUrl;
+  wrap.classList.remove('hidden');
 }
 
 function openCurrentPdf_() {
@@ -1477,37 +1505,6 @@ async function copyCurrentPdfUrl_() {
 
   await copyText_(state.currentResult.downloadUrl);
   toast_('URLをコピーしました');
-}
-
-async function shareCurrentPdf_() {
-  if (!state.currentResult || !state.currentResult.downloadUrl) {
-    toast_('共有するURLがありません');
-    return;
-  }
-
-  var message =
-    formatDocumentType_(state.currentResult.documentType) + 'のご案内\n' +
-    'No: ' + (state.currentResult.documentNo || '-') + '\n' +
-    '宛名: ' + (state.currentResult.recipientName || '-') + '\n' +
-    '金額: ' + formatNumber_(state.currentResult.total || 0) + '円\n' +
-    state.currentResult.downloadUrl;
-
-  if (!state.liffReady || typeof liff === 'undefined' || !liff.isApiAvailable('shareTargetPicker')) {
-    await copyText_(message);
-    toast_('LINE共有未対応のため、共有文をコピーしました');
-    return;
-  }
-
-  var result = await liff.shareTargetPicker([
-    {
-      type: 'text',
-      text: message,
-    }
-  ]);
-
-  if (result) {
-    toast_('LINEで共有しました');
-  }
 }
 
 /**
