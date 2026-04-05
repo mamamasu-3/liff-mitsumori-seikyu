@@ -1520,13 +1520,19 @@ async function sendPdfUrlToChat_(doc, pdf) {
     '金額: ' + total + '円\n' +
     pdf.downloadUrl;
 
+  var ctx = liff.getContext() || {};
+  toast_('DEBUG context: type=' + (ctx.type || 'none') + ', utouId=' + (ctx.utouId || 'none'));
+
+  // 2秒待ってからsendMessages（デバッグトーストが見えるように）
+  await new Promise(function(r) { setTimeout(r, 2000); });
+
   try {
     await liff.sendMessages([{ type: 'text', text: text }]);
     toast_('トークにURLを送信しました');
   } catch (e) {
     console.warn('[sendMessages]', e);
     var detail = (e && e.message) ? e.message : String(e);
-    toast_('メッセージ送信に失敗: ' + detail);
+    toast_('送信失敗: ' + detail + ' | context.type=' + (ctx.type || 'none'));
   }
 }
 
