@@ -1520,8 +1520,11 @@ async function sendPdfUrlToChat_(doc, pdf) {
 
   try {
     await liff.sendMessages([{ type: 'text', text: text }]);
+    toast_('トークにURLを送信しました');
   } catch (e) {
     console.warn('[sendMessages]', e);
+    var detail = (e && e.message) ? e.message : String(e);
+    toast_('メッセージ送信に失敗: ' + detail);
   }
 }
 
