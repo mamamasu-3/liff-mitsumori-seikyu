@@ -102,12 +102,15 @@
         gap: 6px;
         font-size: 13px;
         font-weight: 700;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .field input,
       .field textarea,
       .field select {
         width: 100%;
+        max-width: 100%;
         min-width: 0;
         border: 1px solid #d9dce3;
         border-radius: 10px;
@@ -119,8 +122,8 @@
         appearance: none;
       }
 
-      .field input[type="date"] {
-        padding: 9px 12px;
+      .field input[type="date"]::-webkit-date-and-time-value {
+        text-align: left;
       }
 
       .field textarea {
@@ -343,15 +346,21 @@
       .history-actions .small-btn {
         padding: 10px 14px;
         font-size: 13px;
-        border: 1px solid #d0d5dd;
-        background: #fff;
-        color: #344054;
+        border: none;
+        background: #06c755;
+        color: #fff;
         border-radius: 10px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        font-weight: 700;
       }
 
       .history-actions .small-btn:active {
-        background: #f2f4f7;
+        opacity: 0.8;
+      }
+
+      .history-actions .small-btn[data-action="duplicate"],
+      .history-actions .small-btn[data-action="pdf"] {
+        background: #eff2f6;
+        color: #344054;
       }
 
       .helper {
@@ -444,11 +453,6 @@
         <div>
           <h1>LINE帳票BOT</h1>
           <p id="userBadge" class="app-sub">初期化中...</p>
-        </div>
-
-        <div class="segmented">
-          <button id="btnTypeEstimate" type="button" class="active">見積書</button>
-          <button id="btnTypeInvoice" type="button">請求書</button>
         </div>
       </header>
 
@@ -838,14 +842,6 @@ function bindEvents_() {
     showSection_('profile');
   });
 
-  el_('btnTypeEstimate').addEventListener('click', function() {
-    setDocumentType_('estimate');
-  });
-
-  el_('btnTypeInvoice').addEventListener('click', function() {
-    setDocumentType_('invoice');
-  });
-
   el_('btnSaveProfile').addEventListener('click', saveProfile_);
   el_('btnAddItem').addEventListener('click', function() {
     addItemRow_();
@@ -905,8 +901,7 @@ function bindEvents_() {
  * ========================================
  */
 function updateUserBadge_() {
-  var mode = state.devMode ? '開発モード' : 'LIFFログイン';
-  el_('userBadge').textContent = state.displayName + ' / ' + mode;
+  el_('userBadge').textContent = state.displayName + ' さん、こんにちは！';
 }
 
 function showSection_(name) {
@@ -924,9 +919,6 @@ function setDocumentType_(type) {
   el_('documentType').value = type;
 
   var isEstimate = type === 'estimate';
-
-  el_('btnTypeEstimate').classList.toggle('active', isEstimate);
-  el_('btnTypeInvoice').classList.toggle('active', !isEstimate);
 
   el_('estimateFields').classList.toggle('hidden', !isEstimate);
   el_('invoiceFields').classList.toggle('hidden', isEstimate);
