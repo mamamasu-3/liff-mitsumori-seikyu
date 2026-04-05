@@ -122,6 +122,10 @@
         appearance: none;
       }
 
+      .field input[type="date"] {
+        color: #222;
+      }
+
       .field input[type="date"]::-webkit-date-and-time-value {
         text-align: left;
       }
@@ -1300,7 +1304,7 @@ function renderHistoryList_(documents) {
         ? '    <button type="button" class="small-btn" data-action="invoice" data-document-id="' + escapeHtml_(readServerValue_(doc, 'document_id')) + '">この見積から請求書</button>'
         : ''),
       (pdfUrl
-        ? '    <button type="button" class="small-btn" data-action="pdf" data-pdf-url="' + escapeHtml_(pdfUrl) + '">PDF</button>'
+        ? '    <button type="button" class="small-btn" data-action="pdf" data-pdf-url="' + escapeHtml_(pdfUrl) + '">ダウンロード</button>'
         : ''),
       '  </div>',
       '</div>'
