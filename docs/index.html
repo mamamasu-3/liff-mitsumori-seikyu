@@ -1093,9 +1093,9 @@ async function saveCurrentDocument_(status) {
     toast_(status === 'issued' ? 'PDFを発行しました' : '下書きを保存しました');
     showSection_('document');
 
-    // PDF発行時にLIFFのトークにURLを送信
+    // PDF発行時にLIFFのトークにURLを送信（失敗しても無視）
     if (status === 'issued' && res.pdf && res.pdf.downloadUrl) {
-      await sendPdfUrlToChat_(res.document, res.pdf);
+      try { await sendPdfUrlToChat_(res.document, res.pdf); } catch (_) {}
     }
   } catch (err) {
     console.error(err);
