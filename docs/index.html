@@ -1503,36 +1503,27 @@ function openCurrentPdf_() {
 }
 
 async function sendPdfUrlToChat_(doc, pdf) {
-  var canSend = state.liffReady && typeof liff !== 'undefined' && liff.isApiAvailable('sendMessages');
-  if (!canSend) {
-    toast_('sendMessages不可: liffReady=' + state.liffReady + ', apiAvailable=' + (typeof liff !== 'undefined' ? liff.isApiAvailable('sendMessages') : 'N/A'));
-    return;
-  }
-
-  var docType = formatDocumentType_(readServerValue_(doc, 'document_type'));
-  var docNo = readServerValue_(doc, 'document_no') || '';
-  var recipient = readServerValue_(doc, 'recipient_name') || '';
-  var total = formatNumber_(Number(readServerValue_(doc, 'total') || 0));
-
-  var text = docType + 'を発行しました\n' +
-    'No: ' + docNo + '\n' +
-    '宛名: ' + recipient + '\n' +
-    '金額: ' + total + '円\n' +
-    pdf.downloadUrl;
-
-  var ctx = liff.getContext() || {};
-  toast_('DEBUG context: type=' + (ctx.type || 'none') + ', utouId=' + (ctx.utouId || 'none'));
-
-  // 2秒待ってからsendMessages（デバッグトーストが見えるように）
-  await new Promise(function(r) { setTimeout(r, 2000); });
-
   try {
+    if (!state.liffReady || typeof liff === 'undefined') return;
+
+    var docType = formatDocumentType_(readServerValue_(doc, 'document_type'));
+    var docNo = readServerValue_(doc, 'document_no') || '';
+    var recipient = readServerValue_(doc, 'recipient_name') || '';
+    var total = formatNumber_(Number(readServerValue_(doc, 'total') || 0));
+
+    var text = docType + 'を発行しました\n' +
+      'No: ' + docNo + '\n' +
+      '宛名: ' + recipient + '\n' +
+      '金額: ' + total + '円\n' +
+      pdf.downloadUrl;
+
     await liff.sendMessages([{ type: 'text', text: text }]);
     toast_('トークにURLを送信しました');
   } catch (e) {
-    console.warn('[sendMessages]', e);
     var detail = (e && e.message) ? e.message : String(e);
-    toast_('送信失敗: ' + detail + ' | context.type=' + (ctx.type || 'none'));
+    var stack = (e && e.stack) ? e.stack.substring(0, 200) : '';
+    toast_('送信失敗: ' + detail);
+    console.error('[sendPdfUrlToChat_]', detail, stack);
   }
 }
 
